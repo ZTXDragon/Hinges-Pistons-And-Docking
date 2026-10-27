@@ -180,6 +180,8 @@ namespace ZTX.HingesPistonsDocking
                 PendingRepairs.RemoveStaleWrecks(shipB);
                 if (pendFar.Count > 0 || farSkipped > 0)
                     Log.Info($"Split: carried {farBack} pending repair(s) / planned part(s) with the far side ({farSkipped} skipped); {pendNear.Count} left untouched on ship {shipA.UniqueID}.");
+                BlueprintAudit.Report(shipA, "after split");
+                BlueprintAudit.Report(shipB, "after split");
                 int decalsMoved = 0, decalsShared = 0;
                 for (int i = 0; i < shipB.DecalLayers.Length; i++)
                     SplitDecals(shipA, shipB, i, ref decalsMoved, ref decalsShared);

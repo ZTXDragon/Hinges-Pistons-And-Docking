@@ -258,7 +258,7 @@ namespace ZTX.HingesPistonsDocking
                 Log.Info($"Hinge base at {bp.Location}: lost arm kept as repairs -- {wrecks} wreck(s) laid under their blueprints.");
         }
 
-        private static MergeRecord PruneToBlueprint(Part bp, MergeRecord rec, int slide, string what)
+        private static MergeRecord PruneToBlueprint(Part bp, MergeRecord rec, int slide, string what, Func<MergeMember, bool> keepAlways = null)
         {
             Ship ship = bp.Ship;
             if (ship?.BlueprintParts == null || rec == null) return rec;
@@ -267,6 +267,7 @@ namespace ZTX.HingesPistonsDocking
             {
                 MergeMember m = rec.Member(i);
                 if (Built(ship, bp, f, m, slide, out _)) return true;
+                if (keepAlways != null && keepAlways(m)) return true;
                 PartRules rules = RulesOf(ship, m.Hash);
                 if (rules == null) return false;
                 Placement(bp, f, m, slide, out IntVector2 cell, out int rot, out bool flip);
@@ -274,6 +275,22 @@ namespace ZTX.HingesPistonsDocking
             });
             int dropped = rec.MemberCount - kept.MemberCount;
             if (dropped == 0) return rec;
+            if (BlueprintAudit.ENABLED)
+            {
+                var keptKeys = new HashSet<(uint, IntVector2)>();
+                for (int i = 0; i < kept.MemberCount; i++) keptKeys.Add((kept.Member(i).Hash, kept.Member(i).Rel));
+                var gone = new List<(PartRules, IntVector2, int, bool)>();
+                for (int i = 0; i < rec.MemberCount; i++)
+                {
+                    MergeMember m = rec.Member(i);
+                    if (keptKeys.Contains((m.Hash, m.Rel))) continue;
+                    PartRules rules = RulesOf(ship, m.Hash);
+                    if (rules == null) continue;
+                    Placement(bp, f, m, slide, out IntVector2 cell, out int rot, out bool flip);
+                    gone.Add((rules, cell, rot, flip));
+                }
+                BlueprintAudit.Dropped(bp, gone);
+            }
             if (ship.DestroyedParts != null)
             {
                 var keptSet = new HashSet<(uint, IntVector2)>();
@@ -333,6 +350,14 @@ namespace ZTX.HingesPistonsDocking
                         if (!holder.Rods.Contains(rp)) holder.Rods.Add(rp);
                     }
                 }
+                HashSet<IntVector2> innerCells = null;
+                var innerAway = new List<HashSet<IntVector2>>();
+                Func<MergeMember, bool> innerOwned = m =>
+                {
+                    innerCells ??= InnerJoints(ship, bp, rec, f, k, innerAway);
+                    Placement(bp, f, m, k, out IntVector2 at, out _, out _);
+                    return innerCells.Contains(at);
+                };
                 StrongBox<int> checkedAt = s_mergedChecked.GetValue(b, _ => new StrongBox<int>(0));
                 int generation = s_splitGeneration;
                 if (checkedAt.Value != generation)
@@ -345,16 +370,18 @@ namespace ZTX.HingesPistonsDocking
                         RetractCutArm(mgr, cut, rec, k, f);
                         return;
                     }
+                    innerCells ??= InnerJoints(ship, bp, rec, f, k, innerAway);
+                    RemoveAwayInnerLeftovers(ship, bp, rec, f, k, innerAway);
                     for (int i = 0; i < rec.MemberCount; i++)
                     {
                         PartRules rules = RulesOf(ship, rec.Member(i).Hash);
-                        if (rules == null) continue;
+                        if (rules == null || innerOwned(rec.Member(i))) continue;
                         Placement(bp, f, rec.Member(i), k, out IntVector2 cell, out int rot, out bool flip);
                         if (ship.Parts[cell, PartRectType.Normal] == null && ship.BlueprintParts.GetExactPart(rules, cell, rot, flip) != null
                             && ship.DestroyedParts != null && !ship.DestroyedParts.HasPartAt(rules.GetRect(cell, rot)))
                             ship.DestroyedParts.CreateDestroyedPart(rules, cell, rot, flip);
                     }
-                    var (placed, _, _, settings) = PlaceBlueprints(bp, rec, m => !Built(ship, bp, f, m, k, out bool taken) && !taken, k);
+                    var (placed, _, _, settings) = PlaceBlueprints(bp, rec, m => !innerOwned(m) && !Built(ship, bp, f, m, k, out bool taken) && !taken, k);
                     int rods = 0;
                     if (b is ZtxPistonBaseComponent piston && ship.Rules.PartsByID.TryGetValue(new ID<PartRules>(piston.Rules.RodPart), out PartRules rodRules) && rodRules != null)
                     {
@@ -371,12 +398,125 @@ namespace ZTX.HingesPistonsDocking
                     if (placed > 0 || rods > 0)
                         Log.Info($"Merged piston at {bp.Location}: {placed} part(s) of its arm and {rods} rod segment(s) laid as repairs ({settings} setting(s) restored) -- they were gone, not just damaged.");
                 }
-                PruneToBlueprint(bp, rec, k, "merged");
+                PruneToBlueprint(bp, rec, k, "merged", innerOwned);
             }
             catch (Exception ex)
             {
                 Log.Exception("MergeRebuild.ServiceMerged", ex);
             }
+        }
+
+        private static readonly ID<PartComponentRules>[] s_baseIds =
+        {
+            new ID<PartComponentRules>("ZtxPistonBase"), new ID<PartComponentRules>("ZtxMotorBase"), new ID<PartComponentRules>("ZtxHingeBase"),
+        };
+
+        private static ZtxHingeBaseComponent BaseOf(Part p)
+        {
+            foreach (ID<PartComponentRules> id in s_baseIds)
+                if (p.TryGetComponent<ZtxHingeBaseComponent>(id, out ZtxHingeBaseComponent b) && b != null) return b;
+            return null;
+        }
+
+        public static HashSet<IntVector2> InnerOwnedCells(IntVector2 innerLoc, IntVector2 facing, IEnumerable<IntVector2> homeCells, int maxSlide)
+        {
+            var owned = new HashSet<IntVector2>();
+            for (int s = 1; s <= maxSlide; s++) owned.Add(innerLoc + facing * s);
+            foreach (IntVector2 h in homeCells)
+                for (int s = 0; s <= maxSlide; s++) owned.Add(h + facing * s);
+            return owned;
+        }
+
+        private const int MAX_JOINT_DEPTH = 6;
+
+        private static HashSet<IntVector2> InnerJoints(Ship ship, Part outerBase, MergeRecord rec, IntVector2 f, int k, List<HashSet<IntVector2>> away)
+        {
+            var owned = new HashSet<IntVector2>();
+            var seen = new HashSet<Part> { outerBase };
+            for (int i = 0; i < rec.MemberCount; i++)
+            {
+                Placement(outerBase, f, rec.Member(i), k, out IntVector2 cell, out _, out _);
+                Part p = ship.Parts[cell, PartRectType.Normal];
+                if (p == null || p.IsUnderConstruction || seen.Contains(p) || BaseOf(p) == null) continue;
+                AddJoint(p, new List<IntVector2> { p.Location }, owned, away, false, seen, 1);
+            }
+            return owned;
+        }
+
+        public static HashSet<IntVector2> NestedBaseCells(IEnumerable<IntVector2> parentBases, IntVector2 offset, IntVector2 parentFacing, int parentMax)
+        {
+            var cells = new HashSet<IntVector2>();
+            foreach (IntVector2 b in parentBases)
+                for (int s = 0; s <= parentMax; s++) cells.Add(b + offset + parentFacing * s);
+            return cells;
+        }
+
+        private static void AddJoint(Part joint, IReadOnlyCollection<IntVector2> baseCells, HashSet<IntVector2> owned,
+            List<HashSet<IntVector2>> away, bool parentAway, HashSet<Part> seen, int depth)
+        {
+            if (depth > MAX_JOINT_DEPTH || !seen.Add(joint)) return;
+            ZtxHingeBaseComponent j = BaseOf(joint);
+            MergeRecord r = j != null ? MergeStore.Read(joint) : null;
+            if (r == null || r.MemberCount == 0) return;
+            IntVector2 fj = HingeShipManager.BaseFacing(joint);
+            int max = j is ZtxPistonBaseComponent piston ? (int)Math.Floor(Math.Max(0f, piston.Rules.MaxExtension)) : 0;
+            var offsets = new List<IntVector2>();
+            foreach (IntVector2 c in HomeCells(joint, r)) offsets.Add(c - joint.Location);
+            var mine = new HashSet<IntVector2>();
+            foreach (IntVector2 b in baseCells)
+            {
+                var homes = new List<IntVector2>(offsets.Count);
+                foreach (IntVector2 o in offsets) homes.Add(b + o);
+                mine.UnionWith(InnerOwnedCells(b, fj, homes, max));
+            }
+            owned.UnionWith(mine);
+            bool isAway = parentAway || r.State == MergeState.Out;
+            if (isAway) away.Add(mine);
+
+            Ship sectionShip = null;
+            int slide = 0;
+            if (r.State == MergeState.Merged)
+            {
+                sectionShip = joint.Ship;
+                slide = r.Slide;
+            }
+            else if (r.State == MergeState.Out && HingeJointManager.TryGetPinShips(j, out Ship pinA, out Ship pinB))
+            {
+                sectionShip = ReferenceEquals(pinA, joint.Ship) ? pinB : pinA;
+            }
+            if (sectionShip == null) return;
+            for (int i = 0; i < r.MemberCount; i++)
+            {
+                Placement(joint, fj, r.Member(i), slide, out IntVector2 cell, out _, out _);
+                Part nested = sectionShip.Parts[cell, PartRectType.Normal];
+                if (nested == null || nested.IsUnderConstruction || seen.Contains(nested) || BaseOf(nested) == null) continue;
+                IntVector2 offset = cell - joint.Location - fj * slide;
+                AddJoint(nested, NestedBaseCells(baseCells, offset, fj, max), owned, away, isAway, seen, depth + 1);
+            }
+        }
+
+        private static void RemoveAwayInnerLeftovers(Ship ship, Part outerBase, MergeRecord rec, IntVector2 f, int k, List<HashSet<IntVector2>> away)
+        {
+            if (away.Count == 0) return;
+            int removed = 0;
+            for (int i = 0; i < rec.MemberCount; i++)
+            {
+                MergeMember m = rec.Member(i);
+                PartRules rules = RulesOf(ship, m.Hash);
+                if (rules == null) continue;
+                Placement(outerBase, f, m, k, out IntVector2 cell, out int rot, out bool flip);
+                if (ship.Parts[cell, PartRectType.Normal] != null) continue;
+                bool isAway = false;
+                foreach (HashSet<IntVector2> cells in away)
+                    if (cells.Contains(cell)) { isAway = true; break; }
+                if (!isAway) continue;
+                BlueprintPart stale = ship.BlueprintParts.GetExactPart(rules, cell, rot, flip);
+                if (stale != null) { ship.BlueprintParts.RemoveBlueprintPart(stale, removeDoors: true); removed++; }
+                var wreck = ship.DestroyedParts?.GetExactPart(rules, cell, rot, flip);
+                if (wreck != null) ship.DestroyedParts.RemoveDestroyedPart(wreck);
+            }
+            if (removed > 0)
+                Log.Info($"Merged piston at {outerBase.Location}: {removed} stale blueprint part(s) removed where an inner joint's section sat -- that section is out on its own ship.");
         }
 
         private static void RetractCutArm(HingeShipManager mgr, ZtxPistonBaseComponent piston, MergeRecord rec, int k, IntVector2 f)

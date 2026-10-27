@@ -264,6 +264,7 @@ namespace ZTX.HingesPistonsDocking
                 PendingRepairs.RemoveStaleWrecks(shipA);
                 if (pendB.Count > 0 || carrySkipped > 0)
                     Log.Info($"Merge: carried {carried} pending repair(s) / planned part(s) along ({carrySkipped} skipped, cell taken); ship {shipA.UniqueID}'s own left untouched.");
+                BlueprintAudit.Report(shipA, "after merge");
                 shipB.PartNetworks.EndBatchOperation();
                 shipA.PartNetworks.EndBatchOperation();
                 batchesOpen = false;

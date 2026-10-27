@@ -1049,6 +1049,20 @@ namespace ZTX.HingesPistonsDocking
             if (!slider.LimitEnabled) slider.LimitEnabled = true;
         }
 
+        public static bool TryGetPinShips(object tag, out Ship shipA, out Ship shipB)
+        {
+            shipA = null;
+            shipB = null;
+            foreach (PinRecord pin in s_pins)
+            {
+                if (!ReferenceEquals(pin.Tag, tag) || pin.Suspended) continue;
+                shipA = pin.ShipA;
+                shipB = pin.ShipB;
+                return shipA != null && shipB != null;
+            }
+            return false;
+        }
+
         public static bool TryGetSliderState(object tag, out float translation, out float speed)
         {
             translation = 0f;

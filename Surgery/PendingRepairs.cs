@@ -133,7 +133,14 @@ namespace ZTX.HingesPistonsDocking
             using (ShipUpdateInfo info = ShipUpdateInfo.Alloc(ship))
             {
                 info.MatchBlueprintsToPhysical(matchDestroyed: false);
-                info.BlueprintPartsToRemove.RemoveWhere(pi => !mayRemove(pi));
+                var blockedRemovals = new List<PartInfo>();
+                var blockedAdds = new List<PartInfo>();
+                info.BlueprintPartsToRemove.RemoveWhere(pi =>
+                {
+                    if (mayRemove(pi)) return false;
+                    blockedRemovals.Add(pi);
+                    return true;
+                });
                 var removed = new HashSet<IntVector2>();
                 foreach (PartInfo pi in info.BlueprintPartsToRemove)
                     foreach (IntVector2 c in pi.Rect) removed.Add(c);
@@ -141,12 +148,16 @@ namespace ZTX.HingesPistonsDocking
                 {
                     foreach (IntVector2 c in pi.Rect)
                     {
-                        if (reserved != null && reserved.Contains(c)) return true;
-                        if (ship.BlueprintParts[c, PartRectType.Normal] != null && !removed.Contains(c)) return true;
+                        if ((reserved != null && reserved.Contains(c)) || (ship.BlueprintParts[c, PartRectType.Normal] != null && !removed.Contains(c)))
+                        {
+                            blockedAdds.Add(pi);
+                            return true;
+                        }
                     }
                     return false;
                 });
                 info.Apply();
+                BlueprintAudit.Blocked(ship, blockedRemovals, blockedAdds);
             }
         }
 
