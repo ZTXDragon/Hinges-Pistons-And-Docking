@@ -1,0 +1,59 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <AssemblyName>ZTX.HingesPistonsDocking</AssemblyName>
+    <RootNamespace>ZTX.HingesPistonsDocking</RootNamespace>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+
+    <CosmoteerBin
+      Condition="'$(CosmoteerBin)' == ''">D:\SteamLibrary\steamapps\common\Cosmoteer\Bin</CosmoteerBin>
+    <YamlModDir
+      Condition="'$(YamlModDir)' == ''">D:\SteamLibrary\steamapps\workshop\content\799600\3577650065</YamlModDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Cosmoteer">
+      <HintPath>$(CosmoteerBin)\Cosmoteer.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="HalflingCore">
+      <HintPath>$(CosmoteerBin)\HalflingCore.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(YamlModDir)\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Krafs.Publicizer" Version="2.3.0" PrivateAssets="all" />
+    <Publicize Include="Cosmoteer" />
+    <Publicize Include="HalflingCore" />
+    <!-- Publicizer event trap: these events are already public; publicizing
+         their private backing fields creates a CS0229 ambiguity. -->
+    <DoNotPublicize Include="Cosmoteer:Cosmoteer.Ships.ShipPhysics.FixtureAdded" />
+    <DoNotPublicize Include="Cosmoteer:Cosmoteer.Ships.ShipPhysics.FixtureRemoved" />
+    <!-- Same trap on the Halfling GUI events the Logic Console window subscribes to. -->
+    <DoNotPublicize Include="HalflingCore:Halfling.Gui.Widget.Parented" />
+    <DoNotPublicize Include="HalflingCore:Halfling.Gui.Widget.Unparenting" />
+    <DoNotPublicize Include="HalflingCore:Halfling.Gui.Widget.SelfDeactivated" />
+    <DoNotPublicize Include="HalflingCore:Halfling.Gui.Widget.MouseEntered" />
+    <DoNotPublicize Include="HalflingCore:Halfling.Gui.Widget.MouseLeft" />
+    <DoNotPublicize Include="HalflingCore:Halfling.Gui.Components.Selection.SelectionManager.WidgetSelected" />
+    <DoNotPublicize Include="HalflingCore:Halfling.Gui.Components.Focus.WidgetFocusController.Defocused" />
+    <DoNotPublicize Include="Cosmoteer:Cosmoteer.Game.Gui.ColorPicker.ColorChangeStarted" />
+    <DoNotPublicize Include="Cosmoteer:Cosmoteer.Game.Gui.ColorPicker.ColorChangeCommitted" />
+    <DoNotPublicize Include="Cosmoteer:Cosmoteer.Ships.Parts.UI.PartUIToggle.ModeChanged" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Retired implementations kept for reference (v0.2.0 single-part hinge). -->
+    <None Remove="_deprecated/**" />
+  </ItemGroup>
+
+</Project>

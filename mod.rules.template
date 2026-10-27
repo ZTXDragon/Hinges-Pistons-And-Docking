@@ -1,0 +1,357 @@
+ID = ztx.hinges_pistons_docking
+Name = "Hinges, Pistons and Docking"
+Version = 1.0.0
+CompatibleGameVersions = ["0.30.5"]
+ModifiesGameplay = true
+ModifiesMultiplayer = true
+Author = "ZTX"
+Logo = "logo.png"
+StringsFolder = "strings"
+
+ShipLibraries
+[
+	{
+		Folder = "ships"
+		NameKey = "ShipLibraries/HingesDocking"
+		TooltipKey = "ShipLibraries/HingesDockingTip"
+	}
+]
+Description = "Hinges, motors, pistons, rails and carts, docking, build bays and programmable logic for Cosmoteer, built on the game's own physics joints. Jointed sections stay one ship: they take orders together, share crew and supplies, fly as one and jump as one. Needs the YAML mod loader (Steam Workshop 3577650065). Single player only in 1.0.0. See README.md beside the DLL for the parts and how to install."
+
+Actions
+[
+	{
+		Action = AddMany
+		AddTo = "<./Data/ships/terran/terran.rules>/Terran/RenderLayers"
+		ManyToAdd =
+		[
+			{
+				Key = "ztx_joint_low"
+				Value
+				{
+					UniqueBucket = -820
+					RenderStage = Lowest
+					HasNormals = true
+					AtlasTextureParams
+					{
+						MipLevels = 7
+					}
+					Material
+					{
+						Shader = "./Data/ships/common/parts_lit.shader"
+					}
+					DiffuseMaterial
+					{
+						Shader = "./Data/ships/common/parts.shader"
+					}
+					NormalsMaterial
+					{
+						Shader = "./Data/ships/common/normals.shader"
+					}
+					GhostMaterial
+					{
+						Shader = "./Data/ships/common/parts_ghost.shader"
+					}
+				}
+			}
+			{
+				Key = "ztx_joint_high"
+				Value
+				{
+					UniqueBucket = -780
+					RenderStage = Low
+					HasNormals = true
+					AtlasTextureParams
+					{
+						MipLevels = 7
+					}
+					Material
+					{
+						Shader = "./Data/ships/common/parts_lit.shader"
+					}
+					DiffuseMaterial
+					{
+						Shader = "./Data/ships/common/parts.shader"
+					}
+					NormalsMaterial
+					{
+						Shader = "./Data/ships/common/normals.shader"
+					}
+					GhostMaterial
+					{
+						Shader = "./Data/ships/common/parts_ghost.shader"
+					}
+				}
+			}
+			{
+				Key = "ztx_joint_top"
+				Value
+				{
+					UniqueBucket = -770
+					RenderStage = Low
+					HasNormals = true
+					AtlasTextureParams
+					{
+						MipLevels = 7
+					}
+					Material
+					{
+						Shader = "./Data/ships/common/parts_lit.shader"
+					}
+					DiffuseMaterial
+					{
+						Shader = "./Data/ships/common/parts.shader"
+					}
+					NormalsMaterial
+					{
+						Shader = "./Data/ships/common/normals.shader"
+					}
+					GhostMaterial
+					{
+						Shader = "./Data/ships/common/parts_ghost.shader"
+					}
+				}
+			}
+			{
+				Key = "ztx_corridor_joint_top"
+				Value
+				{
+					UniqueBucket = -450
+					RenderStage = Middle
+					AtlasTextureParams
+					{
+						MipLevels = 7
+					}
+					Material
+					{
+						Shader = "./Data/ships/common/parts.shader"
+					}
+				}
+			}
+			{
+				Key = "ztx_roof_high"
+				Value
+				{
+					UniqueBucket = 1250
+					RenderStage = Highest
+					IsRoof = true
+					Inflate = .0001
+					HasNormals = true
+					AtlasTextureParams
+					{
+						MipLevels = 7
+					}
+					Material
+					{
+						Shader = "./Data/ships/common/roof_colored_lit.shader"
+					}
+					DiffuseMaterial
+					{
+						Shader = "./Data/ships/common/roof_colored.shader"
+					}
+					NormalsMaterial
+					{
+						Shader = "./Data/ships/common/roof_normals.shader"
+					}
+				}
+			}
+			{
+				Key = "ztx_roof_top"
+				Value
+				{
+					UniqueBucket = 1260
+					RenderStage = Highest
+					IsRoof = true
+					Inflate = .0001
+					HasNormals = true
+					AtlasTextureParams
+					{
+						MipLevels = 7
+					}
+					Material
+					{
+						Shader = "./Data/ships/common/roof_colored_lit.shader"
+					}
+					DiffuseMaterial
+					{
+						Shader = "./Data/ships/common/roof_colored.shader"
+					}
+					NormalsMaterial
+					{
+						Shader = "./Data/ships/common/roof_normals.shader"
+					}
+				}
+			}
+			{
+				Key = "ztx_rail_v"
+				Value
+				{
+					UniqueBucket = -795
+					RenderStage = Lowest
+					AtlasTextureParams
+					{
+						MipLevels = 7
+					}
+					Material
+					{
+						Shader = "./Data/ships/common/parts.shader"
+					}
+					GhostMaterial
+					{
+						Shader = "./Data/ships/common/parts_ghost.shader"
+					}
+					NormalsMaterial
+					{
+						Shader = "./Data/ships/common/no_normals.shader"
+					}
+				}
+			}
+			{
+				Key = "ztx_rail_h"
+				Value
+				{
+					UniqueBucket = -790
+					RenderStage = Lowest
+					AtlasTextureParams
+					{
+						MipLevels = 7
+					}
+					Material
+					{
+						Shader = "./Data/ships/common/parts.shader"
+					}
+					GhostMaterial
+					{
+						Shader = "./Data/ships/common/parts_ghost.shader"
+					}
+				}
+			}
+			{
+				Key = "ztx_rail_mark"
+				Value
+				{
+					UniqueBucket = -785
+					RenderStage = Lowest
+					AtlasTextureParams
+					{
+						MipLevels = 7
+					}
+					Material
+					{
+						Shader = "./Data/ships/common/parts.shader"
+					}
+				}
+			}
+			{
+				Key = "ztx_rail_bed"
+				Value
+				{
+					UniqueBucket = -798
+					RenderStage = Lowest
+					AtlasTextureParams
+					{
+						MipLevels = 7
+					}
+					Material
+					{
+						Shader = "./Data/ships/common/parts.shader"
+					}
+					GhostMaterial
+					{
+						Shader = "./Data/ships/common/parts_ghost.shader"
+					}
+					NormalsMaterial
+					{
+						Shader = "./Data/ships/common/no_normals.shader"
+					}
+				}
+			}
+		]
+	}
+
+	{
+		Action = AddMany
+		AddTo = "<./Data/ships/terran/terran.rules>/Terran/Parts"
+		ManyToAdd =
+		[
+			&<parts/hinge/hinge_base/hinge_base.rules>/Part
+			&<parts/hinge/motor_base/motor_base.rules>/Part
+			&<parts/hinge/hinge_base/corridor_hinge_base.rules>/Part
+			&<parts/hinge/piston_base/piston_base.rules>/Part
+			&<parts/hinge/piston_base/corridor_piston_base.rules>/Part
+			&<parts/hinge/hinge_tip/hinge_tip.rules>/Part
+			&<parts/hinge/hinge_tip/corridor_hinge_tip.rules>/Part
+			&<parts/hinge/piston_head/piston_head.rules>/Part
+			&<parts/hinge/piston_head/corridor_piston_head.rules>/Part
+			&<parts/hinge/piston_rod/piston_rod.rules>/Part
+			&<parts/hinge/piston_rod/corridor_piston_rod.rules>/Part
+			&<parts/rail/rail_terminal/rail_terminal.rules>/Part
+			&<parts/rail/rail/rail.rules>/Part
+			&<parts/rail/rail_stop/rail_stop.rules>/Part
+			&<parts/rail/rail_cart/rail_cart.rules>/Part
+			&<parts/rail/rail_switch/rail_switch.rules>/Part
+			&<parts/rail/rail_curve/rail_curve.rules>/Part
+			&<parts/dock/dock_clamp/dock_clamp.rules>/Part
+			&<parts/dock/dock_pad/dock_pad.rules>/Part
+			&<parts/dock/bay_station/bay_station.rules>/Part
+			&<parts/dock/bay_terminal/bay_terminal.rules>/Part
+			&<parts/logic/logic_wire/logic_wire.rules>/Part
+			&<parts/logic/logic_wire_armor/logic_wire_armor.rules>/Part
+			&<parts/logic/logic_wire_frame/logic_wire_frame.rules>/Part
+			&<parts/logic/logic_button/logic_button.rules>/Part
+			&<parts/logic/weapon_sensor/weapon_sensor.rules>/Part
+			&<parts/logic/damage_sensor/damage_sensor.rules>/Part
+			&<parts/logic/proximity_sensor/proximity_sensor.rules>/Part
+			&<parts/logic/ship_sensor/ship_sensor.rules>/Part
+			&<parts/logic/logic_adapter/logic_adapter.rules>/Part
+			&<parts/logic/indicator_lamp/indicator_lamp.rules>/Part
+			&<parts/logic/logic_console/logic_console.rules>/Part
+			&<parts/logic/remote_link/remote_link.rules>/Part
+			&<parts/structure/armor_open_top/armor_open_top.rules>/Part
+			&<parts/structure/armor_open_corner/armor_open_corner.rules>/Part
+			&<parts/structure/armor_open_through/armor_open_through.rules>/Part
+			&<parts/structure/armor_open_cap/armor_open_cap.rules>/Part
+			&<parts/structure/frame/frame.rules>/Part
+			&<parts/structure/frame_wedge/frame_wedge.rules>/Part
+			&<parts/structure/frame_tri/frame_tri.rules>/Part
+			&<parts/structure/frame_1x2_wedge/frame_1x2_wedge.rules>/Part
+			&<parts/structure/frame_1x3_wedge/frame_1x3_wedge.rules>/Part
+			&<parts/structure/frame_hybrid_1x1/frame_hybrid_1x1.rules>/Part
+			&<parts/structure/frame_hybrid_tri/frame_hybrid_tri.rules>/Part
+			&<parts/structure/frame_hybrid_1x2/frame_hybrid_1x2.rules>/Part
+			&<parts/structure/frame_hybrid_1x3/frame_hybrid_1x3.rules>/Part
+		]
+	}
+
+	{
+		Action = AddMany
+		AddTo = "<gui/game/parts/part_toggles.rules>/PartToggles"
+		ManyToAdd = &<gui/part_toggles.rules>/PartToggles
+	}
+
+	{
+		Action = AddMany
+		AddTo = "<gui/game/parts/part_triggers.rules>/PartTriggers"
+		ManyToAdd = &<gui/part_triggers.rules>/PartTriggers
+	}
+
+	{
+		Action = Add
+		AddTo = "<gui/game/parts/networks/part_networks.rules>/OverlayIcons"
+		Name = LogicPort
+		ToAdd = &<gui/logic_overlay.rules>/LogicPort
+	}
+	{
+		Action = Add
+		AddTo = "<gui/game/parts/networks/part_networks.rules>/RouteLines"
+		Name = Logic
+		ToAdd = &<gui/logic_overlay.rules>/Logic
+	}
+
+	{
+		Action = Replace
+		Replace = "<./Data/gui/menus.rules>/LogoShip"
+		With = "gui/logo.ship.png"
+		IgnoreIfNotExisting = true
+	}
+]

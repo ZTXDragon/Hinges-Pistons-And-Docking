@@ -1,0 +1,12 @@
+<Project>
+  <!--
+    Redirects build output OUTSIDE the Cosmoteer Mods folder because Cosmoteer's
+    mod scanner walks the install folder recursively for DLLs. Without this a
+    stray bin/obj under a mod folder triggers "Two or more mods have the same
+    library" at load. Same pattern as ZTX.RammingDamage.
+  -->
+  <PropertyGroup>
+    <BaseOutputPath>$(LOCALAPPDATA)\ZTX.HingesPistonsDocking.Build\bin\</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(LOCALAPPDATA)\ZTX.HingesPistonsDocking.Build\obj\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+</Project>

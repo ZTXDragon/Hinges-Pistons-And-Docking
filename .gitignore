@@ -1,0 +1,13 @@
+bin/
+obj/
+
+*.md
+!README.md
+
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.swp
+.DS_Store
