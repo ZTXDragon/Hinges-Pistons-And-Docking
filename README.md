@@ -31,6 +31,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File build_and_install.ps1
 It builds Release against the game's `Bin` folder and the YAML loader, checks that `Core/Log.cs` and
 `mod.rules.template` carry the same version, and copies the DLL and `mod.rules` into the installed mod folder.
 
+## Notes
+
+- AI was used during code generation of this mod.
+
 ## License
 
 MIT, see `LICENSE`.
